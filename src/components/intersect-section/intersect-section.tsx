@@ -1,49 +1,77 @@
-import styled from 'styled-components'
-import React from 'react'
+import styled from "styled-components";
+import React, { useEffect, useRef } from "react";
 
 interface IIntersectProps {
   children: React.ReactNode;
-  onActiveCb: (element: IntersectionObserverEntry) => void
-  id?: string;
-  hideDownArrow?: boolean
+  onActiveCb: (element: IntersectionObserverEntry) => void;
+  hideDownArrow?: boolean;
+  id: string;
+  useMarker?: boolean;
 }
-export function InterSection(
-  { children, onActiveCb, id, hideDownArrow = false }: IIntersectProps
-) {
-  const sectionRef = React.useRef(null)
+export function InterSection({
+  children,
+  onActiveCb,
+  hideDownArrow = false,
+  id,
+  useMarker = false,
+}: IIntersectProps) {
+  const sectionRef = useRef<HTMLElement | null>(null);
 
-  React.useEffect(() => {
-    const section = sectionRef.current
-    if (section === null) return
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (section === null) return;
 
-    const observer = new IntersectionObserver((entries) => {
-      const [entry] = entries
+    let targetElement = section;
 
-      if (entry.isIntersecting) {
-        onActiveCb(entry)
+    if (useMarker) {
+      const marker = document.querySelector(`.section-marker[id="${id}"]`);
+      if (marker) {
+        // @ts-expect-error
+        targetElement = marker;
       }
-    }, {
-      threshold: 0.5
-    })
+    }
 
-    observer.observe(section)
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+
+        if (entry.isIntersecting) {
+
+          if (useMarker && entry.target.classList.contains("section-marker")) {
+            const modifiedEntry = {
+              ...entry,
+              target: section,
+            };
+            onActiveCb(modifiedEntry as IntersectionObserverEntry);
+          } else {
+            onActiveCb(entry);
+          }
+        }
+      },
+      {
+        threshold: useMarker ? 0.1 : 0.5,
+        rootMargin: useMarker ? "0px 0px -80% 0px" : "0px",
+      },
+    );
+
+    observer.observe(targetElement);
 
     return () => {
-      observer.unobserve(section)
-    }
-  }, [])
+      observer.unobserve(targetElement);
+    };
+  }, [onActiveCb, id, useMarker]);
 
   return (
     <Wrapper
       ref={sectionRef}
-      {...(id && { ['data-title']: id })}
+      {...(id && { ["data-title"]: id })}
       data-hide-arrow={hideDownArrow}
     >
       {children}
     </Wrapper>
-  )
+  );
 }
 
 const Wrapper = styled.section`
-  width: 100vw;
-`
+  width: 100%;
+`;

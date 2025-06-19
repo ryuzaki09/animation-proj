@@ -8,6 +8,8 @@ const DEV_MODE = process.env.NODE_ENV === "development";
 
 const config: UserConfigFn = (env) => {
   process.env = { ...process.env, ...loadEnv(env.mode, process.cwd()) };
+  const viteTarget = process.env.VITE_TARGET ?? "all";
+
   return defineConfig({
     server: {
       port: 8080,
@@ -25,6 +27,9 @@ const config: UserConfigFn = (env) => {
     appType: "spa",
     root: "src",
     clearScreen: false,
+    define: {
+      __TARGET__: JSON.stringify(viteTarget),
+    },
     plugins: [
       tsconfigPaths(),
       react({

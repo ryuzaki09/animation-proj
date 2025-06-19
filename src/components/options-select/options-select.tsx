@@ -1,99 +1,116 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from "react";
 
-import * as Style from './options-select.styles'
+import * as Style from "./options-select.styles";
+import { OptionsSelectT, OptionsT } from "~/types";
+import { useDetectScrollable } from "~/hooks/use-detect-scrollable";
 
 interface IOptionsSelectProps {
-  bgImg: string
-  options: {
-    title: string;
-    description: string;
-    btnText?: string
-    onClick?: () => void
-  }[]
-  onSubmitCb?: (selectedAnswer: number) => void
-  savedAnswer?: number | null
+  bgImg: string;
+  content: OptionsSelectT;
+  onSubmitCb?: (selectedAnswer: number) => void;
+  hideSubmit?: boolean;
+  savedAnswer?: number | null;
 }
-export function OptionsSelect(
-  { bgImg, options, onSubmitCb, savedAnswer = null }: IOptionsSelectProps
-) {
-  const [selectedAnswer, setSelectedAnswer] = React.useState<number | null>(savedAnswer)
-  const wrapperRef = React.useRef<HTMLDivElement>(null)
+export function OptionsSelect({ bgImg, content, onSubmitCb, savedAnswer = null, hideSubmit }: IOptionsSelectProps) {
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(savedAnswer);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   function navigateToAnswer() {
     setTimeout(() => {
-      const wrapper = wrapperRef.current
-      if (!wrapper) return
+      const wrapper = wrapperRef.current;
+      if (!wrapper) return;
 
-      const nextSection = wrapper.parentElement?.nextSibling as HTMLElement
+      const nextSection = wrapper.parentElement?.nextSibling as HTMLElement;
       if (nextSection) {
-        nextSection.scrollIntoView({ behavior: 'smooth' })
+        nextSection.scrollIntoView({ behavior: "smooth" });
       }
-    }, 1000)
+    }, 1000);
   }
 
   const handleSubmit = () => {
     if (onSubmitCb && selectedAnswer) {
-      onSubmitCb(selectedAnswer)
-      navigateToAnswer()
+      onSubmitCb(selectedAnswer);
+      navigateToAnswer();
     }
-  }
+  };
 
-  const handleSelection = (option: IOptionsSelectProps['options'][number]) => {
-    option.onClick && option.onClick()
-    // navigateToAnswer()
-  }
+  const handleSelection = (option: IOptionsSelectProps["content"]["options"][number]) => {
+    option.onClick && option.onClick();
+    navigateToAnswer();
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const element = e.currentTarget;
+    const isAtTop = element.scrollTop === 0;
+    const isAtBottom = element.scrollHeight - element.scrollTop === element.clientHeight;
+
+    element.classList.toggle("at-top", isAtTop);
+    element.classList.toggle("at-bottom", isAtBottom);
+  };
 
   if (onSubmitCb) {
     return (
       <Style.Wrapper $bgImg={bgImg} ref={wrapperRef}>
         <Style.InnerWrapper>
-          <div>What will you do?</div>
-          <p className="bot-1">Select one option:</p>
+          <h2>{content.question}</h2>
+          <p className="bot-1">{content.description}</p>
           <Style.OptionsWrapper>
-            {options.map((o, index) => (
-              <Style.OptionBlock
-                key={index}
-                onClick={() => setSelectedAnswer(index + 1)}
-                $isSelected={(selectedAnswer || 0) - 1 === index}
-                aria-selected={(selectedAnswer || 0) - 1 === index}
-              >
-                <div>{o.title}</div>
-                <div>{o.description}</div>
-                {o.btnText && (
-                  <button onClick={() => o.onClick && o.onClick()}>
-                    {o.btnText}
-                  </button>
-                )}
-              </Style.OptionBlock>
-            ))}
+            {content.options.map((o, index) => {
+              const contentRef = useRef<HTMLDivElement>(null);
+              contentRefs.current[index] = contentRef.current;
+
+              const isScrollable = useDetectScrollable(contentRef);
+              return (
+                <Style.OptionBlock
+                  key={index}
+                  onClick={() => setSelectedAnswer(index + 1)}
+                  $isSelected={(selectedAnswer || 0) - 1 === index}
+                  aria-selected={(selectedAnswer || 0) - 1 === index}
+                  $isScrollable={isScrollable}
+                  $hasHover
+                >
+                  <div ref={contentRef} onScroll={handleScroll}>
+                    {o.title && o.title}
+                    {o.description && o.description}
+                  </div>
+                </Style.OptionBlock>
+              );
+            })}
           </Style.OptionsWrapper>
-          <Style.SubmitWrapper>
-            <button onClick={handleSubmit}>Submit</button>
-          </Style.SubmitWrapper>
+          {!hideSubmit && (
+            <Style.SubmitWrapper>
+              <button onClick={handleSubmit}>Submit</button>
+            </Style.SubmitWrapper>
+          )}
         </Style.InnerWrapper>
       </Style.Wrapper>
-    )
+    );
   }
 
   return (
     <Style.Wrapper $bgImg={bgImg} ref={wrapperRef}>
       <Style.InnerWrapper>
-        <div>What will you do?</div>
-        <p className="bot-1">Select one option:</p>
+        <h2>{content.question}</h2>
+        <p className="bot-1">{content.description}</p>
         <Style.OptionsWrapper>
-          {options.map((o, index) => (
-            <Style.OptionBlock key={index}>
-              <div>{o.title}</div>
-              <div>{o.description}</div>
-              {o.btnText && (
-                <button onClick={() => handleSelection(o)}>
-                  {o.btnText}
-                </button>
-              )}
-            </Style.OptionBlock>
-          ))}
+          {content.options.map((o, index) => {
+            const contentRef = useRef<HTMLDivElement>(null);
+            contentRefs.current[index] = contentRef.current;
+
+            const isScrollable = useDetectScrollable(contentRef);
+            return (
+              <Style.OptionBlock key={index} $isScrollable={isScrollable}>
+                <div ref={contentRef} onScroll={handleScroll} className="at-top">
+                  {o.title && o.title}
+                  {o.description && o.description}
+                </div>
+                {o.btnText && <button onClick={() => handleSelection(o)}>{o.btnText}</button>}
+              </Style.OptionBlock>
+            );
+          })}
         </Style.OptionsWrapper>
       </Style.InnerWrapper>
     </Style.Wrapper>
-  )
+  );
 }

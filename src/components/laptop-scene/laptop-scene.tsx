@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { assets } from '~/config/assets'
+import { assets } from '~/config/module-1/assets'
 
 import * as Style from './laptop-scene.styles'
 

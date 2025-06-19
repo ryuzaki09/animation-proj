@@ -1,6 +1,6 @@
 import parse from "html-react-parser";
 import type { ContentId } from "~/types";
-import content from "~/config/content";
+import { modulesConfig  } from "~/config/content";
 import { appState } from "~/state/app-state";
 
 type Props = {
@@ -9,9 +9,9 @@ type Props = {
 
 export default function Translate(props: Props) {
   const language = appState((state) => state.bookmark.language);
-  return parse(content[language][props.id] ?? content.en[props.id]);
+  return parse(modulesConfig [language][props.id] ?? modulesConfig .en[props.id]);
 }
 
 export function getTranslation(id: ContentId) {
-  return content[appState.getState().bookmark.language][id] ?? content.en[id];
+  return modulesConfig[appState.getState().bookmark.language][id] ?? modulesConfig.en[id];
 }

@@ -13,11 +13,16 @@ interface IImagePathSelectionProps {
     rightDescription: string;
     onClickRightSelection: () => void;
   },
-  chosenPath?: 1 | 2 | null
+  chosenPath?: 0 | 1 | 2;
+  startingModal?: {
+    content: React.ReactNode
+    onCloseCb: () => void
+  };
 }
 
-export function ImagePathSelection({ data, chosenPath = null }: IImagePathSelectionProps) {
-  const [selectedPath, setSelectedPath] = React.useState<null | 1 | 2>(chosenPath)
+export function ImagePathSelection({ data, chosenPath = 0, startingModal }: IImagePathSelectionProps) {
+  const [selectedPath, setSelectedPath] = React.useState(chosenPath)
+  const modalRef = React.useRef<HTMLDialogElement>(null)
 
   const handleLeftClick = () => {
     if (selectedPath) return
@@ -29,6 +34,15 @@ export function ImagePathSelection({ data, chosenPath = null }: IImagePathSelect
     if (selectedPath) return
     setSelectedPath(2)
     data.onClickRightSelection()
+  }
+
+  const handleCloseModal = () => {
+    if (!modalRef.current) return
+
+    modalRef.current.close()
+    if (startingModal) {
+      startingModal.onCloseCb()
+    }
   }
 
   return (
@@ -51,6 +65,15 @@ export function ImagePathSelection({ data, chosenPath = null }: IImagePathSelect
           {data.rightImgTitle}
         </Style.BlockTitle>
       </Style.RightBlock>
+      {startingModal && (
+        <Style.SectionModalWrapper>
+          <Style.ModalOverlay aria-hidden />
+          <Style.ModalContent ref={modalRef}>
+            <div><button onClick={handleCloseModal}>✕</button></div>
+            <div>{startingModal.content}</div>
+          </Style.ModalContent>
+        </Style.SectionModalWrapper>
+      )}
     </Style.Wrapper>
   )
 }

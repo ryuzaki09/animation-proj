@@ -1,19 +1,32 @@
-import React from 'react'
+import React from "react";
 
-import * as Style from './text-and-image.styles'
+import * as Style from "./text-and-image.styles";
 
 interface ITextAndImageProps {
-  contents: React.ReactNode[]
+  content?: React.ReactNode[];
+  contentWithDownload?: (onDownload: () => void, hasDownloaded: boolean) => React.ReactNode[];
   imgSrc: string;
-  containImg?: boolean
-  overflowText?: boolean
+  containImg?: boolean;
+  overflowText?: boolean;
+  button?: {
+    text: string;
+    click: () => void;
+  };
+  buttonRevertColors?: boolean;
 }
-export function TextAndImage(
-  { contents, imgSrc, containImg = false, overflowText = false }: ITextAndImageProps
-) {
-  const contentWrapperRef = React.useRef<HTMLDivElement>(null)
+export function TextAndImage({
+  content,
+  contentWithDownload,
+  imgSrc,
+  containImg = false,
+  overflowText = false,
+  button,
+  buttonRevertColors,
+}: ITextAndImageProps) {
+  const contentWrapperRef = React.useRef<HTMLDivElement>(null);
   const [showTopFade, setShowTopFade] = React.useState(false);
   const [showBottomFade, setShowBottomFade] = React.useState(true);
+  const [hasDownloaded, setHasDownloaded] = React.useState(false);
 
   const handleScroll = () => {
     const el = contentWrapperRef.current;
@@ -26,30 +39,35 @@ export function TextAndImage(
   };
 
   React.useEffect(() => {
-    const contentWrapper = contentWrapperRef.current
+    const contentWrapper = contentWrapperRef.current;
 
-    if (!contentWrapper || !overflowText) return
+    if (!contentWrapper || !overflowText) return;
 
     handleScroll(); // Initial check
-    contentWrapper.addEventListener('scroll', handleScroll);
+    contentWrapper.addEventListener("scroll", handleScroll);
 
-    return () => contentWrapper.removeEventListener('scroll', handleScroll);
+    return () => contentWrapper.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleDownload = () => {
+    setHasDownloaded(true);
+  };
+
+  const renderedContent = contentWithDownload ? contentWithDownload(handleDownload, hasDownloaded) : (content ?? []);
 
   return (
     <Style.Wrapper>
-      <Style.ContentWrapper $overflow={overflowText}>
-        {showTopFade && overflowText && <Style.FadeTop />}
-        {contents.map((content, index) => (
+      <Style.ContentWrapper $overflow={overflowText} $buttonRevertColors={buttonRevertColors}>
+        {renderedContent.map((content, index) => (
           <div key={index} {...(index === 0 && { ref: contentWrapperRef })}>
             {content}
+            {button && <button onClick={() => button.click()}>{button.text}</button>}
           </div>
         ))}
-        {showBottomFade && overflowText && <Style.FadeBottom />}
       </Style.ContentWrapper>
       <Style.StickyImgWrapper $containImg={containImg}>
         <img src={imgSrc} alt="" />
       </Style.StickyImgWrapper>
     </Style.Wrapper>
-  )
+  );
 }

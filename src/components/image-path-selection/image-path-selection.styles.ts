@@ -104,3 +104,52 @@ export const BlockTitle = styled.button`
   font-weight: 500;
   font-size: 34px;
 `
+
+export const SectionModalWrapper = styled.div`
+  position: absolute;
+  inset: 0;
+`;
+
+export const ModalOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(5px);
+`;
+
+export const ModalContent = styled.dialog`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: none;
+
+  &::backdrop {
+    backdrop-filter: blur(5px);
+  }
+
+  & > div:nth-of-type(1) {
+    display: flex;
+    justify-content: flex-end;
+    padding: var(--space-xxs);
+    font-size: 24px;
+
+    & button {
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+
+      &:hover {
+        background: revert;
+      }
+    }
+  }
+
+  & > div:nth-of-type(2) {
+    padding: var(--space-xxs) var(--space-sm) var(--space-sm);
+  }
+`;
